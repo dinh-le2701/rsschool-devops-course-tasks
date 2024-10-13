@@ -29,6 +29,7 @@ jobs:
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.CHECK_2_USER_ACCESS_KEY }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.CHECK_2_USER_SECRET_ACCESS_KEY }}
+          AWS_REGION: "us-east-1"
         run: |
           mkdir -p ~/.aws
           echo "[default]" > ~/.aws/credentials
