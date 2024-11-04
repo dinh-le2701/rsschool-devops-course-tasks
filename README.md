@@ -6,6 +6,8 @@ The course aims to offer in-depth knowledge of DevOps principles and essential A
 
 # Task 4: Jenkins Installation and Configuration
 
+## See Detail about this task in [Task04.md](https://github.com/dinh-le2701/rsschool-devops-course-tasks/blob/feature/task4-jenkins/Task04.md)
+
 ## File Structure
 - **```.github/workflows/```**:
   The directory is where GitHub-specific files are stored, particularly workflows for GitHub Actions.
