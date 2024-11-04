@@ -1,0 +1,35 @@
+#cloud-config
+
+package_update: true
+package_upgrade: true
+package_reboot_if_required: true
+
+users:
+    - name: ubuntu
+      lock_passwd: true
+      shell: /bin/bash
+      ssh_authorized_keys:
+      - ${init_ssh_public_key}
+      groups: sudo
+      sudo: ALL=(ALL) NOPASSWD:ALL
+
+packages:
+  - net-tools
+  - mc
+
+runcmd:
+  - dd if=/dev/zero of=/swapfile count=4096 bs=1MiB
+  - chmod 600 /swapfile
+  - mkswap /swapfile
+  - swapon /swapfile
+  - echo "/swapfile   swap    swap    sw  0   0" >> /etc/fstab
+  - curl -sfL https://get.k3s.io | sh -
+  - curl -O https://get.helm.sh/helm-v3.16.2-linux-amd64.tar.gz
+  - tar -xf helm-v3.16.2-linux-amd64.tar.gz
+  - mv linux-amd64/helm /usr/local/bin/
+  - mkdir -p /home/ubuntu/.kube
+  - cp /etc/rancher/k3s/k3s.yaml /home/ubuntu/.kube/config
+  - chown -R ubuntu:ubuntu /home/ubuntu/.kube
+  - chmod 600 /home/ubuntu/.kube/config
+  - echo 'export KUBECONFIG=~/.kube/config' >> /home/ubuntu/.bashrc
+  
