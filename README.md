@@ -1,130 +1,113 @@
-# DevOps Course
+# Task 1: AWS Account Configuration
 
-## The goal
+## Objective
 
-The course aims to offer in-depth knowledge of DevOps principles and essential AWS services necessary for efficient automation and infrastructure management. Participants will gain practical skills in setting up, deploying, and managing Kubernetes clusters on AWS, using tools like Kops and Terraform.
+In this task, you will:
 
-## Prerequisite
+- Install and configure the required software on your local computer
+- Set up an AWS account with the necessary permissions and security configurations
+- Deploy S3 buckets for Terraform states
+- Create a federation with your AWS account for Github Actions
+- Create an IAM role for Github Actions
+- Create a Github Actions workflow to deploy infrastructure in AWS
 
-- The application code should have unit tests and should be able to run (`npm test` or similar).
-- Students should have a SonarQube account and will be able to run with their code (`sonar-scanner -Dsonar.projectKey=Your_Project_Key -Dsonar.sources=. -Dsonar.host.url=https://sonarcloud.io/`).
-- Dockerfile with application.
+## Steps
 
-## Module 1: Configuration and Resources
+1. **Install AWS CLI and Terraform**
 
-### Part 1 (configuration)
+   - Follow the instructions to install [AWS CLI 2](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html).
+   - Follow the instructions to install [Terraform 1.6+](https://developer.hashicorp.com/terraform/install?product_intent=terraform).
+   - **optional** Configuring Terraform version manager [tfenv](https://github.com/tfutils/tfenv)
 
-- Developing the architecture of the infrastructure with private and public networks.
-- Install aws cli.
-- Installation and configuration of Terraform.
-- Configuring access to AWS via Terraform (API keys, IAM roles).
+2. **Create IAM User and Configure MFA**
 
-### Part 2 (resources)
+   - In your AWS account, navigate to IAM and create a new user with the following policies attached:
+     - AmazonEC2FullAccess
+     - AmazonRoute53FullAccess
+     - AmazonS3FullAccess
+     - IAMFullAccess
+     - AmazonVPCFullAccess
+     - AmazonSQSFullAccess
+     - AmazonEventBridgeFullAccess
+   - Configure MFA for both the new user and the root user.
+   - Generate a new pair of Access Key ID and Secret Access Key for the user.
 
-#### Option 1 (paid version)
+3. **Configure AWS CLI**
 
-- Writing Terraform code for creating VPC with distinct public and private subnets, and route tables.
-- NAT gateway in the public network.
-- Creating security groups and rules that correspond to the network architecture and resource distribution across public and private networks.
-- Describing IAM roles and policies for Kubernetes.
-- Configuring EC2 instances for Kubernetes nodes.
-- Setting up EBS volumes and attaching them to instances.
-- Implementing a bastion host within the public subnet.
-- Create an S3 bucket in AWS to store the Kops state.
-- Setting up a DNS record for the Kubernetes cluster (if used).
+   - Configure AWS CLI to use the new user's credentials.
+   - Verify the configuration by running the command: `aws ec2 describe-instance-types --instance-types t4g.nano`.
 
-#### Option 2 (free resources)
+4. **Create a Github repository for your Terraform code**
 
-- Writing Terraform code for creating VPC with distinct public and private subnets, and route tables.
-- NAT instance in the public network.
-- Creating security groups and rules.
-- Describing IAM roles and policies for Kubernetes.
-- Configuring EC2 instances for Kubernetes nodes.
-- Setting up EBS volumes and attaching them to instances.
-- Implementing a bastion host within the public subnet.
-- Create an S3 bucket in AWS to store the Kops state.
+   - Using your personal account create a repository `rsschool-devops-course-tasks`
 
-## Module 2: Cluster Configuration and Creation
+5. **Create a bucket for Terraform states**
 
-### Part 1 (cluster configuration)
+   - [Managing Terraform states Best Practices](https://spacelift.io/blog/terraform-s3-backend)
+   - [Terraform backend S3](https://developer.hashicorp.com/terraform/language/backend/s3)
 
-#### Option 1 (kops config)
+6. **Create an IAM role for Github Actions**
 
-- Installing Kops on your workstation.
-- Creating an IAM user for Kops with the necessary permissions.
-- Configuring access to AWS using IAM credentials.
+   - Create an IAM role `GithubActionsRole` with the same permissions as in step 2:
+     - AmazonEC2FullAccess
+     - AmazonRoute53FullAccess
+     - AmazonS3FullAccess
+     - IAMFullAccess
+     - AmazonVPCFullAccess
+     - AmazonSQSFullAccess
+     - AmazonEventBridgeFullAccess
+   - [Terraform resource](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role)
 
-#### Option 2 (k3s config)
+7. **Configure an Identity Provider and Trust policies for Github Actions**
 
-- Installing K3s on your local machine.
-- Creating an IAM user with the necessary permissions specifically for managing the K3s environment.
-- Configuring AWS IAM credentials on the workstation.
+   - Update the `GithubActionsRole` IAM role with Trust policy following the next guides
+   - [IAM roles terms and concepts](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles.html#id_roles_terms-and-concepts)
+   - [Github tutorial](https://docs.github.com/en/actions/security-for-github-actions/security-hardening-your-deployments/configuring-openid-connect-in-amazon-web-services)
+   - [AWS documentation on OIDC providers](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_create_for-idp_oidc.html#idp_oidc_Create_GitHub)
+   - `GitHubOrg` is a Github `username` in this case
 
-### Part 2 (create cluster)
+8. **Create a Github Actions workflow for deployment via Terraform**
+   - The workflow should have 3 jobs that run on pull request and push to the default branch:
+     - `terraform-check` with format checking [terraform fmt](https://developer.hashicorp.com/terraform/cli/commands/fmt)
+     - `terraform-plan` for planning deployments [terraform plan](https://developer.hashicorp.com/terraform/cli/commands/plan)
+     - `terraform-apply` for deploying [terraform apply](https://developer.hashicorp.com/terraform/cli/commands/apply)
+   - [terraform init](https://developer.hashicorp.com/terraform/cli/commands/init)
+   - [Github actions reference](https://docs.github.com/en/actions/writing-workflows/workflow-syntax-for-github-actions)
+   - [Setup terraform](https://github.com/hashicorp/setup-terraform)
+   - [Configure AWS Credentials](https://github.com/aws-actions/configure-aws-credentials)
 
-#### Option 1 (kops installation)
+## Submission
 
-- Prepare cluster configuration with kops command.
-- Apply kops configuration.
-- Validate the cluster.
-- Create an account in Kubernetes for Jenkins.
+Ensure that the AWS CLI and Terraform installations are verified using `aws --version` and `terraform version`.
 
-#### Option 2 (k3s installation)
+## Evaluation Criteria (100 points for covering all criteria)
 
-- Prepare the K3s cluster configuration.
-- Applying the K3s configuration using Terraform and K3s setup commands.
-- Validating the cluster to ensure it's correctly configured and operational.
-- Check k3s service status.
-- Get nodes status.
-- Inspect cluster resources.
+1. **MFA User configured (10 points)**
 
-## Module 3: Jenkins Server Installation and Configuration
+   - Provide a screenshot of the non-root account secured by MFA (ensure sensitive information is not shared).
 
-### Part 1 (Installation and configuration Jenkins server)
+2. **Bucket and GithubActionsRole IAM role configured (30 points)**
 
-- Installation and configuration of Helm, a package manager for Kubernetes.
-- Configuring and applying the Helm chart to deploy Jenkins in the cluster.
-- Setting up traffic routing to Jenkins through Ingress or a LoadBalancer.
-- Accessing the Jenkins interface through a browser.
-- Installing necessary plugins in Jenkins. (sonarqube, docker).
-- Set up necessary plugins in Jenkins for Kubernetes like Kubernetes plugin. Configure the plugin with endpoints and credentials for Kubernetes.
+   - Terraform code is created and includes:
+     - A bucket for Terraform states
+     - IAM role with correct Identity-based and Trust policies
 
-### Part 2 (Create Pipeline)
+3. **Github Actions workflow is created (30 points)**
 
-- Create pipeline, add steps:
-  1. Build application.
-  2. Unit tests.
-  3. SonarQube check.
-  4. Build and push docker image to ECR.
-  5. Deploy docker image to Kubernetes cluster.
-- Create a Helm chart for your application. The chart should contain templates for all necessary Kubernetes resources like Deployments as well as Health checks, liveness, readiness probes.
-- Store your Helm chart in a source control system accessible from Jenkins.
-- In the deployment stage of your Jenkinsfile, add steps to deploy the application using Helm.
-- Check that the application works as expected.
-- After the deployment, you can add steps to verify that the application is running as expected. This could involve checking the status of the Kubernetes deployment, running integration tests, or hitting a health check endpoint.
+   - Workflow includes all jobs
 
-## Module 4: Monitoring with Prometheus and Grafana
+4. **Code Organization (10 points)**
 
-### Part 1 (Installation and configuration Prometheus)
+   - Variables are defined in a separate variables file.
+   - Resources are separated into different files for better organization.
 
-- Using Helm to install Prometheus in Kubernetes.
-- Configuring Prometheus to collect metrics from the cluster.
-- Creating and configuring Service Monitor to track services in the cluster.
-- Configuring alert rules in Prometheus for monitoring critical events.
+5. **Verification (10 points)**
 
-### Part 2 (Installation and configuration Grafana)
+   - Terraform plan is executed successfully for `GithubActionsRole`
+   - Terraform plan is executed successfully for a terraform state bucket
 
-- Deploying Grafana in Kubernetes using Helm.
-- Setting up secure access to Grafana via Ingress or LoadBalancer.
-- Configuring Grafana to connect to Prometheus as a data source.
-- Importing or creating dashboards to visualize metrics from Prometheus.
-
-### Part 3. (Testing monitoring)
-
-- Conducting tests to verify the collection of metrics and their display in Grafana.
-- Simulating failures or high loads to test configured alerts.
-
-## Useful links
-
-- [Kubernetes with Kops](https://blog.kubecost.com/blog/kubernetes-kops/)
-- [K3s AWS Terraform Cluster](https://garutilorenzo.github.io/k3s-aws-terraform-cluster/)
+6. **Additional Tasks (10 points)**
+   - **Documentation (5 points)**
+     - Document the infrastructure setup and usage in a README file.
+   - **Submission (5 points)**
+   - A GitHub Actions (GHA) pipeline is passing
